@@ -10,6 +10,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 import math
+import os
+import csv
 
 def cpt(data, v, i, cycles=1024):
     
@@ -83,6 +85,11 @@ res = cpt(data, v=data['VA'], i=data['IA'])
 end = time.time()
 
 print("The time of execution of above program is :", end-start)
+
+with open(os.path.splitext(arquivo)[0] + "_d.csv", "w") as outfile:
+   writer = csv.writer(outfile)
+   writer.writerow(res.keys())
+   writer.writerows(zip(*res.values()))
 
 plt.plot(res['power'])
 plt.plot(res['reactive'])
