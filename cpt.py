@@ -51,8 +51,8 @@ def cpt(data, v, i, cycles=1024):
 
         def feed(self, v, i):
             self.v_c.feed(v)
-            w = self.v_c.get()
-            self.maf.feed(w * i)
+            _v_c = self.v_c.get()
+            self.maf.feed(_v_c * i)
             return
         
         def get(self):
