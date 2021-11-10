@@ -46,36 +46,25 @@ def cpt(data, v, i, cycles=1024):
         def get(self):
             return (self.integral - super().get() ) * math.pi / cycles
 
-    class Reactive:
-        def __init__(self):
-            self.v_c = UnbiasedIntegral()
-            self.maf = MAF()
-
-        def feed(self, v, i):
-            self.v_c.feed(v)
-            _v_c = self.v_c.get()
-            self.maf.feed(_v_c * i)
-            return
-        
-        def get(self):
-            return self.maf.get()
-
-    _power = MAF()
     power = [0] * len(v)
-    
-    reactive = [0] * len(v)
-    _reactive = Reactive()
-    
-    for index in range(len(v) ):
-        _power.feed(v[index]*i[index])
-        power[index] = _power.get()
+    P = MAF() # Potência ativa média
 
-        _reactive.feed(v[index], i[index])
-        reactive[index] = _reactive.get()
-        
+    reactive = [0] * len(v)
+    v_c = UnbiasedIntegral() # Integral imparcial da tensão
+    W = MAF() # Energia reativa média
+
+    for index in range(len(v) ):
+        P.feed(v[index]*i[index])
+        power[index] = P.get()
+
+        v_c.feed(v[index])
+        W.feed(v_c.get() * i[index])
+
+        reactive[index] = W.get()
+
     return { 'power': power, 'reactive': reactive }
 
-arquivo = "../test.csv"
+arquivo = "../luminaria.csv"
 
 col_names = ['date', 'VA', 'VB', 'VC', 'VN', 'IA', 'IB', 'IC', 'IN']
 data = pd.read_csv(arquivo, header=None, names=col_names, sep='\t')
