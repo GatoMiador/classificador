@@ -44,7 +44,7 @@ def cpt(data, v, i, cycles=1024):
             return
         
         def get(self):
-            return (self.integral - super().get() ) * math.pi / cycles
+            return (self.integral - super().get() ) * 2 * math.pi / cycles
 
     power = [0] * len(v)
     P = MAF() # Potência ativa média
