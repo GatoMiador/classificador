@@ -13,25 +13,26 @@ import math
 import os
 import csv
 
+
 def cpt(data, v, i, time, cycles=1024):
-    
+
     class MAF:
         index = 0
         full = 0
 
         def __init__(self):
             self.moving = [0] * cycles
-        
+
         def feed(self, n):
             self.full = self.full - self.moving[self.index]
             self.full = self.full + n
             self.moving[self.index] = n
-            
+
             self.index = self.index + 1
             if self.index >= cycles:
                 self.index = self.index - cycles
             return self
-        
+
         def get(self):
             return self.full / cycles
 
@@ -42,42 +43,42 @@ def cpt(data, v, i, time, cycles=1024):
             self.integral = self.integral + n
             super().feed(self.integral)
             return self
-        
+
         def get(self):
-            return (self.integral - super().get() ) * 2 * math.pi / cycles
+            return (self.integral - super().get()) * 2 * math.pi / cycles
 
-    Pa = MAF() # Potência ativa média
+    Pa = MAF()  # Potência ativa média
 
-    v_c = UnbiasedIntegral() # Integral imparcial da tensão
-    W = MAF() # Energia reativa média
+    v_c = UnbiasedIntegral()  # Integral imparcial da tensão
+    W = MAF()  # Energia reativa média
 
     V = [0] * len(v)
-    U = MAF() # Valor eficaz da tensão
+    U = MAF()  # Valor eficaz da tensão
 
-    U_C = MAF() # Valor eficaz da integral imparcial da tensão
+    U_C = MAF()  # Valor eficaz da integral imparcial da tensão
 
     I = [0] * len(v)
-    _I = MAF() # Valor eficaz da corrente
+    _I = MAF()  # Valor eficaz da corrente
 
-    i_a = MAF() # Corrente ativa
+    i_a = MAF()  # Corrente ativa
 
-    i_r = MAF() # Corrente reativa
+    i_r = MAF()  # Corrente reativa
 
-    i_v = MAF() # Corrente residual
+    i_v = MAF()  # Corrente residual
 
-    P = [0] * len(v) # Potência ativa média
+    P = [0] * len(v)  # Potência ativa média
 
-    Q = [0] * len(v) # Potência reativa média
+    Q = [0] * len(v)  # Potência reativa média
 
-    D = [0] * len(v) # Potência residual média
+    D = [0] * len(v)  # Potência residual média
 
-    fp = [0] * len(v) # Fator de potência
+    fp = [0] * len(v)  # Fator de potência
 
-    fl = [0] * len(v) # Fator de não lineridade
+    fl = [0] * len(v)  # Fator de não lineridade
 
-    fr = [0] * len(v) # Fator de reatividade
+    fr = [0] * len(v)  # Fator de reatividade
 
-    for index in range(len(v) ):
+    for index in range(len(v)):
         # Calcula a potência ativa média
         _P = Pa.feed(v[index]*i[index]).get()
 
@@ -92,13 +93,13 @@ def cpt(data, v, i, time, cycles=1024):
         V[index] = math.sqrt(_U)
 
         # Calcula a corrente eficaz
-        I[index] = math.sqrt(_I.feed(i[index] ** 2).get() )
+        I[index] = math.sqrt(_I.feed(i[index] ** 2).get())
 
         # Calcula a corrente ativa
         _ia = 0
         if _U != 0:
             _ia = _P * v[index] / _U
-        Ia = math.sqrt(i_a.feed(_ia ** 2).get() )
+        Ia = math.sqrt(i_a.feed(_ia ** 2).get())
 
         # Calcula a potência ativa
         P[index] = V[index] * Ia
@@ -110,14 +111,14 @@ def cpt(data, v, i, time, cycles=1024):
         _ir = 0
         if _U_C != 0:
             _ir = _W * _v_c / _U_C
-        Ir = math.sqrt(i_r.feed(_ir ** 2).get() )
+        Ir = math.sqrt(i_r.feed(_ir ** 2).get())
 
         # Calcula a potência reativa
         Q[index] = V[index] * Ir
 
         # Calcula a corrente residual
         _iv = i[index] - _ia - _ir
-        Iv = math.sqrt(i_v.feed(_iv ** 2).get() )
+        Iv = math.sqrt(i_v.feed(_iv ** 2).get())
 
         # Calcula a potência residual
         D[index] = V[index] * Iv
@@ -138,27 +139,39 @@ def cpt(data, v, i, time, cycles=1024):
             fp[index] = 0
             fl[index] = 0
             fr[index] = 0
-    return { 'time': time, 'V': V, 'I': I, 'P': P, 'Q': Q, 'D': D, 'fp': fp, 'fl': fl, 'fr': fr }
+    return {'V': V, 'I': I, 'P': P, 'Q': Q, 'D': D, 'fp': fp, 'fl': fl, 'fr': fr}
 
-arquivo = "../test.csv"
 
-col_names = ['date', 'VA', 'VB', 'VC', 'VN', 'IA', 'IB', 'IC', 'IN']
-data = pd.read_csv(arquivo, header=None, names=col_names, sep='\t')
+def convert(arquivo):
+    col_names = ['date', 'VA', 'VB', 'VC', 'VN', 'IA', 'IB', 'IC', 'IN']
+    data = pd.read_csv(arquivo, header=None, names=col_names, sep='\t')
 
-start = time.time()
-res = cpt(data, v=data['VA'], i=data['IA'], time=data['date'])
-end = time.time()
+    start = time.time()
+    res = cpt(data, v=data['VA'], i=data['IA'], time=data['date'])
+    end = time.time()
 
-print("The time of execution of above program is :", end-start)
+    print("The time of execution of above program is :", end-start)
 
-with open(os.path.splitext(arquivo)[0] + "_d.csv", "w") as outfile:
-   writer = csv.writer(outfile)
-   writer.writerow(res.keys() )
-   writer.writerows(zip(*res.values() ) )
+    with open(os.path.splitext(arquivo)[0] + "_d.csv", "w") as outfile:
+        writer = csv.writer(outfile)
+        writer.writerow(res.keys())
+        writer.writerows(zip(*res.values()))
 
-plt.plot(res['V'])
-plt.plot(res['I'])
-plt.plot(res['P'])
-plt.plot(res['Q'])
-plt.plot(res['D'])
-plt.show()
+    # plt.plot(res['V'])
+    # plt.plot(res['I'])
+    plt.plot(res['P'])
+    # plt.plot(res['Q'])
+    # plt.plot(res['D'])
+    # plt.show()
+
+#Calcula aqui a decomposição CPT das medições
+convert("../test.csv")
+convert("../laptop_fechado.csv")
+convert("../laptop_ocioso_tela_ligada.csv")
+convert("../laptop_stress.csv")
+convert("../luminaria.csv")
+convert("../multi.csv")
+convert("../nada.csv")
+convert("../osciloscópio.csv")
+convert("../esmeril.csv")
+convert("../ferro_de_solda.csv")
