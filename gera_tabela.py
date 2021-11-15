@@ -16,20 +16,23 @@ table = pd.DataFrame(columns=nomes)
 
 path = "../"
 
+size=1000
+
 def load_table(arquivo, field, ini, fim, num):
     n = path + arquivo + "_d.csv"
     data = pd.read_csv(n, usecols=nomes)
     data = data.drop(data[data[field] < ini].index)
     data = data.drop(data[data[field] > fim].index)
-
     data['class'] = [ arquivo ] * len(data.index)
     return data.sample(num)
 
-table = table.append(load_table('laptop', 'P', 50, 60, 1000) )
-table = table.append(load_table('luminaria', 'P', 1, 2, 1000) )
-table = table.append(load_table('nada', 'P', 4, 6, 1000) )
-table = table.append(load_table('osciloscópio', 'P', 10, 20, 1000) )
-table = table.append(load_table('esmeril', 'P', 60, 90, 1000) )
-table = table.append(load_table('ferro_de_solda', 'P', 160, 180, 1000) )
+# Carrega as tabelas com os limites
+table = table.append(load_table('laptop', 'P', 50, 60, size) )
+table = table.append(load_table('luminaria', 'P', 1, 2, size) )
+table = table.append(load_table('nada', 'P', 4, 6, size) )
+table = table.append(load_table('osciloscópio', 'P', 10, 20, size) )
+table = table.append(load_table('esmeril', 'P', 60, 90, size) )
+table = table.append(load_table('ferro_de_solda', 'P', 160, 180, size) )
 
+# Salva
 table.to_csv(path + "out_table.csv", index = False)
