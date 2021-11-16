@@ -14,7 +14,7 @@ import os
 import csv
 
 
-def cpt(data, v, i, time, cycles=1024):
+def cpt(v, i, cycles=1024):
 
     class MAF:
         index = 0
@@ -149,7 +149,7 @@ def convert(arquivo):
     data = pd.read_csv(arquivo, header=None, names=col_names, sep='\t')
 
     start = time.time()
-    res = cpt(data, v=data['VA'], i=data['IA'], time=data['date'])
+    res = cpt(v=data['VA'], i=data['IA'])
     end = time.time()
 
     print("The time of execution of above program is :", end-start)
