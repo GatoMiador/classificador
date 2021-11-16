@@ -112,6 +112,8 @@ def cpt(data, v, i, time, cycles=1024):
         if _U_C != 0:
             _ir = _W * _v_c / _U_C
         Ir = math.sqrt(i_r.feed(_ir ** 2).get())
+        if (_W < 0):
+            Ir = -Ir
 
         # Calcula a potência reativa
         Q[index] = V[index] * Ir
