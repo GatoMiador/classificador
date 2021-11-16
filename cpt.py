@@ -168,6 +168,7 @@ def convert(arquivo):
 
 #Calcula aqui a decomposição CPT das medições
 convert("../test.csv")
+convert("../laptop.csv")
 convert("../laptop_fechado.csv")
 convert("../laptop_ocioso_tela_ligada.csv")
 convert("../laptop_stress.csv")
