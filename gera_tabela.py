@@ -7,10 +7,11 @@ Created on Mon Nov 15 12:42:12 2021
 """
 
 import pandas as pd
+import classify as nd
 
 output = "tabela_ia.csv"
 
-nomes = ['P', 'fp', 'fl', 'fr' ]
+nomes = ['P', 'Q', 'D', 'fp', 'fl', 'fr' ]
 
 table = pd.DataFrame(columns=nomes)
 
@@ -24,7 +25,14 @@ def load_table(arquivo, field, ini, fim, num):
     data = data.drop(data[data[field] < ini].index)
     data = data.drop(data[data[field] > fim].index)
     data['class'] = [ arquivo ] * len(data.index)
-    return data.sample(num)
+    results = data.sample(num)
+    # Normaliza os dados aqui
+    [ results['P'], results['Q'], results['D'], results['fr'] ] \
+        = nd.IA.normalize(results['P'],
+                          results['Q'],
+                          results['D'],
+                          results['fr'])
+    return results
 
 # Carrega as tabelas com os limites
 table = table.append(load_table('laptop', 'P', 50, 60, size) )

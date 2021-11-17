@@ -161,7 +161,7 @@ def convert(arquivo):
 
     # plt.plot(res['V'])
     # plt.plot(res['I'])
-    plt.plot(res['P'])
+    # plt.plot(res['P'])
     # plt.plot(res['Q'])
     # plt.plot(res['D'])
     # plt.show()
