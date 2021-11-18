@@ -28,19 +28,17 @@ nomes = ia.n.inputs + [ 'V', 'I' ]
 for chunk in pd.read_csv(path + "multi_d.csv", \
                          usecols=nomes, \
                          chunksize=1024*1024):
-    for index, row in chunk.iterrows():
-        n = n + 1
+    for n, row in chunk.iterrows():
         if step == 0: # Espera pela estabilização dos dados
             if n >= (cycles*2):
                 step = 1
         elif step == 1: # Verifica se a variação é maior que o threshold
             d = abs(row['I'] - ac.I)
             if d > delta:
-                n0 = 0
+                n0 = n
                 step = 2
-        elif step == 2: # Espera por três ciclos
-            n0 = n0 + 1
-            if n0 >= (cycles*3):
+        elif step == 2: # Espera por dois ciclos
+            if (n - n0) >= (cycles*2):
                 I0 = row['I']
                 step = 3
         elif step == 3: # Espera a variação se estabilizar
