@@ -22,9 +22,9 @@ ac = nd.Carga()
 cargas = []
 
 path = "../"
-ia = nd.IA(path + "out_table.csv")
+ia = nd.IA(path + "out_table")
 
-nomes = [ 'P', 'Q', 'D', 'V', 'I', 'fp', 'fl', 'fr' ]
+nomes = ia.n.inputs + [ 'V', 'I' ]
 for chunk in pd.read_csv(path + "multi_d.csv", \
                          usecols=nomes, \
                          chunksize=1024*1024):
@@ -38,9 +38,9 @@ for chunk in pd.read_csv(path + "multi_d.csv", \
             if d > delta:
                 n0 = 0
                 step = 2
-        elif step == 2: # Espera por um ciclo
+        elif step == 2: # Espera por três ciclos
             n0 = n0 + 1
-            if n0 >= cycles:
+            if n0 >= (cycles*3):
                 I0 = row['I']
                 step = 3
         elif step == 3: # Espera a variação se estabilizar
