@@ -47,7 +47,8 @@ class Normal:
         data = data.drop(data[data[field] > fim].index)
         sample = data.sample(num)
         self.classes = self.classes + [ nome ]
-        sample[self.outputs[0] ] = [ self.classes.index(nome) ] * len(sample.index)
+        sample[self.outputs[0] ] = \
+            [ self.classes.index(nome) ] * len(sample.index)
         self.table = self.table.append(sample)
         return
 
@@ -94,7 +95,7 @@ class IA:
         self.n = Normal.load(f)
         self.__neigh = KNeighborsClassifier(n_neighbors=1)
         self.__neigh.fit(
-            self.n.table[ Normal.inputs ],
+            self.n.table[ Normal.inputs ].values,
             [int(x) for x in self.n.table[Normal.outputs[0] ] ])
 
     # Faz a classificação dos dados de carga
