@@ -32,6 +32,7 @@ class Normal:
         self.params = {}
         for o in self.inputs:
             self.params[o] = [ 0, 1 ]
+        self.classes = []
 
     table = pd.DataFrame(columns=inputs)
 
@@ -45,7 +46,8 @@ class Normal:
         data = data.drop(data[data[field] < ini].index)
         data = data.drop(data[data[field] > fim].index)
         sample = data.sample(num)
-        sample[self.outputs[0] ] = [ nome ] * len(sample.index)
+        self.classes = self.classes + [ nome ]
+        sample[self.outputs[0] ] = [ self.classes.index(nome) ] * len(sample.index)
         self.table = self.table.append(sample)
         return
 
@@ -77,6 +79,9 @@ class Normal:
             with open(arquivo + "_params.txt", 'w') as file:
                 file.write(json.dumps(f.params) )
                 file.close()
+            with open(arquivo + "_classes.txt", 'w') as file:
+                file.writelines(f.classes)
+                file.close()
 
     def normalize(self, f):
         for o in self.inputs:
@@ -88,7 +93,9 @@ class IA:
     def __init__(self, f):
         self.n = Normal.load(f)
         self.__neigh = KNeighborsClassifier(n_neighbors=1)
-        self.__neigh.fit(self.n.table[ Normal.inputs ], self.n.table[Normal.outputs[0] ])
+        self.__neigh.fit(
+            self.n.table[ Normal.inputs ],
+            [int(x) for x in self.n.table[Normal.outputs[0] ] ])
 
     # Faz a classificação dos dados de carga
     def classify(self, l):
@@ -99,11 +106,11 @@ class IA:
             'fp': l.fp,
             'fl': l.fl,
             'fr': l.fr })
-        nome = self.__neigh.predict([[
+        n = self.__neigh.predict([[
             r['P'],
             r['Q'],
             r['D'],
             r['fp'],
             r['fl'],
-            r['fr'] ]])
-        return nome[0]
+            r['fr'] ]])[0]
+        return self.n.classes[n]
