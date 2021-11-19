@@ -22,7 +22,7 @@ ac = nd.Carga()
 cargas = []
 
 path = "../"
-ia = nd.IA(path + "out_table")
+ia = nd.IA(path + "out_table", type=nd.Type.KNN)
 
 nomes = ia.n.inputs + [ 'V', 'I' ]
 for chunk in pd.read_csv(path + "multi_d.csv", \

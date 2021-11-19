@@ -8,8 +8,10 @@ Created on Wed Nov 17 08:49:01 2021
 
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 import pickle
 import json
+from enum import Enum
 
 class Carga:
     nome = 'nada'
@@ -90,13 +92,25 @@ class Normal:
             f[o] = f[o] / self.params[o][1]
         return f
 
+class Type(Enum):
+    KNN = 1
+    NEURAL = 2
+
 class IA:
-    def __init__(self, f):
+    def __init__(self, f, type=Type.KNN):
         self.n = Normal.load(f)
-        self.__neigh = KNeighborsClassifier(n_neighbors=1)
-        self.__neigh.fit(
-            self.n.table[ Normal.inputs ].values,
-            self.n.table[Normal.outputs[0] ])
+        if type == Type.KNN:
+            self.__predictor = KNeighborsClassifier(n_neighbors=1)
+            self.__predictor.fit(
+                self.n.table[ Normal.inputs ].values,
+                self.n.table[Normal.outputs[0] ])
+        elif type == Type.NEURAL:
+            self.__predictor = MLPClassifier(
+                solver='lbfgs', alpha=1e-5,
+                hidden_layer_sizes=(13, 2), random_state=1)
+            self.__predictor.fit(
+                self.n.table[ Normal.inputs ].values,
+                self.n.table[Normal.outputs[0] ])
 
     # Faz a classificação dos dados de carga
     def classify(self, l):
@@ -107,7 +121,7 @@ class IA:
             'fp': l.fp,
             'fl': l.fl,
             'fr': l.fr })
-        n = self.__neigh.predict([[
+        n = self.__predictor.predict([[
             r['P'],
             r['Q'],
             r['D'],
