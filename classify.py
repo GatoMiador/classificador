@@ -99,5 +99,11 @@ class IA:
             'fp': l.fp,
             'fl': l.fl,
             'fr': l.fr })
-        nome = self.__neigh.predict([[ r['P'], r['Q'], r['D'], r['fp'], r['fl'], r['fr'] ]])
+        nome = self.__neigh.predict([[
+            r['P'],
+            r['Q'],
+            r['D'],
+            r['fp'],
+            r['fl'],
+            r['fr'] ]])
         return nome[0]
