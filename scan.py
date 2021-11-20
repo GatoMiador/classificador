@@ -65,13 +65,20 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                             l.calc_factors()
                             l.nome = ia.classify(l)
                             if l.nome != "nada":
-                                print("carga entrou:", l.nome)
+                                print("carga entrou:", l.nome, ' -->', n)
                                 # Seta o novo patamar, se a carga não foi 'nada'
                                 ac.P = row['P']
                                 ac.Q = row['Q']
                                 ac.D = row['D']
                                 ac.V = row['V']
                                 ac.I = row['I']
+                            else: 
+                                # Se a carga classificada é 'nada' e temos 
+                                # cargas ativas, zera os valores para que ela 
+                                # seja detectada. Isso acontece porque a carga
+                                # 'nada' é *maior* que a menor carga possível
+                                if len(cargas) > 0:
+                                    ac = nd.Carga()
                             cargas.append(l)
                         else:
                             # Calcula a carga que saiu e classifica ela
@@ -93,7 +100,8 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                                     break
                                 i = i + 1
                             if index >= 0:
-                                print("carga saiu:", cargas[index].nome)
+                                print("carga saiu:", cargas[index].nome,
+                                      ' -->', n)
                                 ac = nd.Carga()
                                 if cargas[index].nome != 'nada':
                                     # Recalcula o thresold
@@ -124,6 +132,11 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
         else:
             print('default')
 
+# Finaliza as cargas que ainda estavam ativas aqui devido a leitura incorreta
+for o in cargas:
+    o.fim = n
+    report.append(o)
+    
 report.sort(key=lambda x: x.ini)
 print('Relatório:')
 for o in report:
@@ -138,5 +151,6 @@ for o in report:
     print('Faror de não linearidade:', o.fl)
     print('Faror de não reatividade:', o.fr)
     print('Início:', o.ini)
+    print('Fim:', o.fim)
     print('Duração:', o.fim - o.ini)
     print('Falso:', o.falso)
