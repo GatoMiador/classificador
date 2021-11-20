@@ -12,6 +12,7 @@ from sklearn.neural_network import MLPClassifier
 import pickle
 import json
 from enum import Enum
+import math
 
 class Carga:
     nome = 'nada'
@@ -25,6 +26,13 @@ class Carga:
     fr = 0
     ini = -1
     fim = -1
+
+    def calc_factors(self):
+        A = math.sqrt(self.P**2 + self.Q**2 + self.D**2)
+        self.fp = self.P / A
+        self.fl = self.D / A
+        self.fr = self.Q / A
+
 
 class Normal:
     inputs = [ 'P', 'Q', 'D', 'fp', 'fl', 'fr']
