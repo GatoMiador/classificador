@@ -57,8 +57,8 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                         l.P = row['P'] - ac.P
                         l.Q = row['Q'] - ac.Q
                         l.D = row['D'] - ac.D
-                        l.V = row['V']
                         l.I = row['I'] - ac.I
+                        l.V = row['V']
                         l.calc_factors()
                         l.nome = ia.classify(l)
                         if l.nome != "nada":
@@ -77,8 +77,8 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                         o.P = ac.P - row['P']
                         o.Q = ac.Q - row['Q']
                         o.D = ac.D - row['D']
-                        o.V = row['V']
                         o.I = ac.I - row['I']
+                        o.V = row['V']
                         o.calc_factors()
                         o.nome = ia.classify(o)
                         # Procura pela carga que saiu
@@ -109,6 +109,7 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                             # Adiciona a falsa detecção no relatório
                             o.ini = n
                             o.fim = n
+                            falso=True
                             report.append(o)
                             print("detecção falsa :", o.nome)
                     step = 1; # Volta a procurar por mudamças
@@ -117,3 +118,19 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                     n0 = n
         else:
             print('default')
+
+print('Relatório:')
+for o in report:
+    print('---------------------------------')
+    print('Nome:', o.nome)
+    print('Tensão:', o.V)
+    print('Corrente:', o.I)
+    print('Potência Ativa:', o.P)
+    print('Potência Reativa:', o.Q)
+    print('Potência de Distorção:', o.D)
+    print('Faror de não potência:', o.fp)
+    print('Faror de não linearidade:', o.fl)
+    print('Faror de não reatividade:', o.fr)
+    print('Início:', o.ini)
+    print('Duração:', o.fim - o.ini)
+    print('Falso:', o.falso)
