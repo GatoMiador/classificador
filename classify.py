@@ -26,6 +26,7 @@ class Carga:
     fr = 0
     ini = -1
     fim = -1
+    falso=False
 
     def calc_factors(self):
         A = math.sqrt(self.P**2 + self.Q**2 + self.D**2)
