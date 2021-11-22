@@ -13,6 +13,7 @@ import pickle
 import json
 from enum import Enum
 import math
+import copy
 
 class Carga:
     nome = 'nada'
@@ -72,8 +73,15 @@ class Normal:
 
     @staticmethod
     def save(arquivo, f, normalize=True, report=True):
+        to = pd.DataFrame()
         # Salva os dados normalizados, se configurado
         if normalize == True:
+            # Salva os dados não normalizados
+            to = copy.deepcopy(f.table)
+            to.drop(f.outputs[0], axis='columns', inplace=True)
+            for c in f.inputs:
+                to.rename(columns = {c: c+'_o'}, inplace = True)
+            # Normaliza os dados
             f.params.clear()
             for o in f.inputs:
                 mn = min(f.table[o])
@@ -87,6 +95,11 @@ class Normal:
             outp.close()
         # Salva o report dos dados aprendidos, se configurado
         if report == True:
+            # Adiciona ao relatório os dados não normalizados
+            if normalize == True:
+                f.table.reset_index(drop=True, inplace=True)
+                to.reset_index(drop=True, inplace=True)
+                f.table = pd.concat([f.table, to], axis=1)
             f.table.to_csv(arquivo + ".csv", index = False)
             with open(arquivo + "_params.txt", 'w') as file:
                 file.write(json.dumps(f.params) )
