@@ -9,6 +9,21 @@ Created on Tue Nov 16 08:34:12 2021
 import pandas as pd
 import classify as nd
 
+def rep(o):
+    print('Nome:', o.nome)
+    print('Tensão:', o.V)
+    print('Corrente:', o.I)
+    print('Potência Ativa:', o.P)
+    print('Potência Reativa:', o.Q)
+    print('Potência de Distorção:', o.D)
+    print('Faror de não potência:', o.fp)
+    print('Faror de não linearidade:', o.fl)
+    print('Faror de não reatividade:', o.fr)
+    print('Início:', o.ini)
+    print('Fim:', o.fim)
+    print('Duração:', o.fim - o.ini)
+    print('Falso:', o.falso)
+
 I0 = 0
 delta = 0.03
 step = 0;
@@ -146,16 +161,4 @@ report.sort(key=lambda x: x.ini)
 print('Relatório:')
 for o in report:
     print('---------------------------------')
-    print('Nome:', o.nome)
-    print('Tensão:', o.V)
-    print('Corrente:', o.I)
-    print('Potência Ativa:', o.P)
-    print('Potência Reativa:', o.Q)
-    print('Potência de Distorção:', o.D)
-    print('Faror de não potência:', o.fp)
-    print('Faror de não linearidade:', o.fl)
-    print('Faror de não reatividade:', o.fr)
-    print('Início:', o.ini)
-    print('Fim:', o.fim)
-    print('Duração:', o.fim - o.ini)
-    print('Falso:', o.falso)
+    rep(o)
