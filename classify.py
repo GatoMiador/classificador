@@ -38,6 +38,7 @@ class Carga:
 
 class Normal:
     inputs = [ 'P', 'Q', 'D', 'fp', 'fl', 'fr']
+    features = [ 'features' ]
     outputs = [ 'class' ]
 
     def __init__(self):
@@ -52,13 +53,15 @@ class Normal:
         self.table.clear()
         self.params.clear();
 
-    def load_table(self, path, nome, field, ini, fim, num):
+    def load_table(self, path, nome, field, ini, fim, num, f=None):
         n = path + nome + "_d.csv"
         data = pd.read_csv(n, usecols=self.inputs)
         data = data.drop(data[data[field] < ini].index)
         data = data.drop(data[data[field] > fim].index)
         sample = data.sample(num)
         self.classes = self.classes + [ nome ]
+        sample[self.features[0]] = \
+            [ f ] * len(sample.index)
         sample[self.outputs[0] ] = \
             [ int(self.classes.index(nome) ) ] * len(sample.index)
         self.table = self.table.append(sample)
@@ -74,11 +77,13 @@ class Normal:
     @staticmethod
     def save(arquivo, f, normalize=True, report=True):
         to = pd.DataFrame()
+        f.table.reset_index(drop=True, inplace=True)
         # Salva os dados normalizados, se configurado
         if normalize == True:
-            # Salva os dados não normalizados
+            # Salva os dados não normalizados, não usados pela IA
             to = copy.deepcopy(f.table)
             to.drop(f.outputs[0], axis='columns', inplace=True)
+            to.drop(f.features[0], axis='columns', inplace=True)
             for c in f.inputs:
                 to.rename(columns = {c: c+'_o'}, inplace = True)
             # Normaliza os dados
@@ -89,7 +94,7 @@ class Normal:
                 mx = max(f.table[o])
                 f.table[o] = f.table[o] / mx
                 f.params[o] = [ mn, mx ]
-        # Salva os parâmetros
+        # Salva os parâmetros que a IA vai usar
         with open(arquivo + ".data", 'wb') as outp:
             pickle.dump(f, outp, pickle.HIGHEST_PROTOCOL)
             outp.close()
@@ -97,9 +102,8 @@ class Normal:
         if report == True:
             # Adiciona ao relatório os dados não normalizados
             if normalize == True:
-                f.table.reset_index(drop=True, inplace=True)
-                to.reset_index(drop=True, inplace=True)
                 f.table = pd.concat([f.table, to], axis=1)
+            # Adiciona os dados usados pela IA
             f.table.to_csv(arquivo + ".csv", index = False)
             with open(arquivo + "_params.txt", 'w') as file:
                 file.write(json.dumps(f.params) )
@@ -136,6 +140,7 @@ class IA:
 
     # Faz a classificação dos dados de carga
     def classify(self, l):
+        # Normaliza a entrada para o classificador
         r = self.n.normalize({
             'P': l.P,
             'Q': l.Q,
@@ -143,6 +148,7 @@ class IA:
             'fp': l.fp,
             'fl': l.fl,
             'fr': l.fr })
+        # Envia para a IA para encontrar o número da carga
         n = self.__predictor.predict([[
             r['P'],
             r['Q'],
@@ -150,4 +156,8 @@ class IA:
             r['fp'],
             r['fl'],
             r['fr'] ]])[0]
-        return self.n.classes[int(n)]
+        # Devolve as peculiaridades da carga
+        f = self.n.table[self.n.table[self.n.outputs[0] ] == n] \
+            [self.n.features[0]].head(1).values[0]
+
+        return [ self.n.classes[int(n)], f]

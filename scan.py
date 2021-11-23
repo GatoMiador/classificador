@@ -31,6 +31,15 @@ n = 0
 cycles = 1024
 n0 = 0;
 
+def_velocidade = cycles*6
+velocidade = def_velocidade
+
+def_ign = (cycles*2)-1
+ign = def_ign
+
+inrush = False
+hora_inrush = 0
+
 ac = nd.Carga()
 
 cargas = []
@@ -45,32 +54,37 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                          chunksize=1024*1024):
     for n, row in chunk.iterrows():
         if step == 0: # Espera pela estabilização dos dados
-            if n >= ((cycles*2)-1):
+            if n >= ign:
                 step = 1
         elif step == 1: # Verifica se a variação é maior que o threshold
             d = abs(row['I'] - ac.I)
             if d >= delta:
                 n0 = n
                 step = 2
-        elif step == 2: # Espera estabilizar por 100ms
-            # Só classifica se a corrente se mantém acima do  delta pelo tempo
+        elif step == 2: # Espera o delta ir até o valor programado
+            # Só classifica se a corrente se mantém acima do delta pelo tempo
             d = abs(row['I'] - ac.I)
             if d >= delta:
-                if (n - n0) >= (cycles*6):
+                if (n - n0) >= velocidade:
                     I0 = row['I']
                     n0 = n
                     step = 3
             else:
                 step = 1 # Volta para o passo 1 se baixou
-        elif step == 3: # Espera estabilizar por 100ms
+        elif step == 3: # Espera estabilizar
             # Verifica se estabilizou
             d = abs(row['I'] - I0)
             if d < delta:
-                if (n - n0) >= (cycles*6):
-                    hora = n - cycles * 12
-                    # Faz a detecção de carga se estabilizou
+                if (n - n0) >= velocidade:
+                    # Encontra a "hora" de quando a carga possivelmente entrou
+                    hora = n - velocidade * 2
+                    # Sinaliza para voltar a encontrar mudanças
+                    step = 1;
+                    # Verifica se a carga entrou ou saiu
                     d = row['I'] - ac.I
                     if d >= 0:
+                        # Faz aqui se a carga entrou
+                        
                         # Remove a carga 'nada' que interfere
                         if len(cargas) == 1:
                             if cargas[0].nome == 'nada':
@@ -85,24 +99,44 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                         l.I = row['I'] - ac.I
                         l.V = row['V']
                         l.calc_factors()
-                        l.nome = ia.classify(l)
-                        if l.nome != "nada":
-                            print("carga entrou:", l.nome, ' -->', hora)
-                            # Seta o novo patamar, se a carga não foi 'nada'
-                            ac.P = row['P']
-                            ac.Q = row['Q']
-                            ac.D = row['D']
-                            ac.V = row['V']
-                            ac.I = row['I']
-                        else: 
-                            # Se a carga classificada é 'nada' e temos 
-                            # cargas ativas, zera os valores para que ela 
-                            # seja detectada. Isso acontece porque a carga
-                            # 'nada' é *maior* que a menor carga possível
-                            if len(cargas) > 0:
-                                ac = nd.Carga()
-                        cargas.append(l)
+                        [ l.nome, f] = ia.classify(l)
+                        # Verifica se temos que acionar o modo inrush
+                        if f is not None:
+                            if 'inrush' in f:
+                                if f['inrush'] == True:
+                                    if inrush == False:
+                                        print('modo inrush acionado:', n)
+                                        inrush = True
+                                        hora_inrush = hora
+                                        velocidade = cycles*60
+                                        ign = n + (cycles*60)-1
+                                        step = 0
+                                    else:
+                                        print('modo inrush desligado:', n)
+                                        inrush = False
+                                        hora = hora_inrush
+                                        velocidade = def_velocidade
+                                        ign = def_ign
+                        if inrush == False:
+                            if l.nome != "nada":
+                                print("carga entrou:", l.nome, ' -->', hora)
+                                # Seta o novo patamar, se a carga não foi 'nada'
+                                ac.P = row['P']
+                                ac.Q = row['Q']
+                                ac.D = row['D']
+                                ac.V = row['V']
+                                ac.I = row['I']
+                            else: 
+                                # Se a carga classificada é 'nada' e temos 
+                                # cargas ativas, zera os valores para que ela 
+                                # seja detectada. Isso acontece porque a carga
+                                # 'nada' é *maior* que a menor carga possível
+                                if len(cargas) > 0:
+                                    ac = nd.Carga()
+                            cargas.append(l)
                     else:
+                        # Faz aqui se a carga saiu
+
                         # Calcula a carga que saiu e classifica ela
                         o = nd.Carga()
                         o.fim = hora;
@@ -112,7 +146,7 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                         o.I = ac.I - row['I']
                         o.V = row['V']
                         o.calc_factors()
-                        o.nome = ia.classify(o)
+                        [ o.nome, f] = ia.classify(o)
                         # Procura pela carga que saiu
                         index = -1
                         i = 0
@@ -134,6 +168,10 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                                         ac.D = ac.D + o.D
                                         ac.I = ac.I + o.I
                                 ac.V = row['V']
+                                # Retorna os parâmetros default caso alterados
+                                velocidade = def_velocidade
+                                ign = def_ign
+                                inrush = False
                             # Atualiza, remove e coloca as cargas no relatório
                             cargas[index].fim = hora
                             report.append(cargas[index])
@@ -145,7 +183,6 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                             o.falso=True
                             report.append(o)
                             print("detecção falsa :", o.nome)
-                    step = 1; # Volta a procurar por mudamças                    
             else:
                 # Volta se a entrada se desestabiizou
                 step = 2
