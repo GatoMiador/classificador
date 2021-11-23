@@ -29,6 +29,7 @@ class Carga:
     fim = -1
     falso=False
 
+    # Calcula os fatores do CPT
     def calc_factors(self):
         A = math.sqrt(self.P**2 + self.Q**2 + self.D**2)
         self.fp = self.P / A
@@ -53,6 +54,7 @@ class Normal:
         self.table.clear()
         self.params.clear();
 
+    # Carrega uma tabela com dados para ensinar a IA
     def load_table(self, path, nome, field, ini, fim, num, f=None):
         n = path + nome + "_d.csv"
         data = pd.read_csv(n, usecols=self.inputs)
@@ -67,6 +69,7 @@ class Normal:
         self.table = self.table.append(sample)
         return
 
+    # Carrega a tabela de descritores para uso
     @staticmethod
     def load(arquivo):
         with open(arquivo + ".data", 'rb') as inp:
@@ -74,6 +77,7 @@ class Normal:
             inp.close()
             return r
 
+    # Salva a tabela de descritores e o relatório para verificação
     @staticmethod
     def save(arquivo, f, normalize=True, report=True):
         to = pd.DataFrame()
@@ -112,6 +116,7 @@ class Normal:
                 file.writelines(f.classes)
                 file.close()
 
+    # Normaliza os dados de teste e validação
     def normalize(self, f):
         for o in self.inputs:
             f[o] = f[o] - self.params[o][0]
