@@ -39,6 +39,7 @@ class Carga:
 
 class Normal:
     inputs = [ 'P', 'Q', 'D', 'fp', 'fl', 'fr']
+    learning_data = [ 'P', 'Q', 'D', 'fp', 'fl', 'fr']
     features = [ 'features' ]
     outputs = [ 'class' ]
 
@@ -133,14 +134,14 @@ class IA:
         if type == Type.KNN:
             self.__predictor = KNeighborsClassifier(n_neighbors=1)
             self.__predictor.fit(
-                self.n.table[ Normal.inputs ].values,
+                self.n.table[ Normal.learning_data ].values,
                 self.n.table[Normal.outputs[0] ])
         elif type == Type.NEURAL:
             self.__predictor = MLPClassifier(
                 solver='lbfgs', alpha=1e-5,
                 hidden_layer_sizes=(13, 2), random_state=1)
             self.__predictor.fit(
-                self.n.table[ Normal.inputs ].values,
+                self.n.table[ Normal.learning_data ].values,
                 self.n.table[Normal.outputs[0] ])
 
     # Faz a classificação dos dados de carga
@@ -154,13 +155,10 @@ class IA:
             'fl': l.fl,
             'fr': l.fr })
         # Envia para a IA para encontrar o número da carga
-        n = self.__predictor.predict([[
-            r['P'],
-            r['Q'],
-            r['D'],
-            r['fp'],
-            r['fl'],
-            r['fr'] ]])[0]
+        z = []
+        for n in Normal.learning_data:
+            z = z + [ r[n] ]
+        n = self.__predictor.predict([z])[0]
         # Devolve as peculiaridades da carga
         f = self.n.table[self.n.table[self.n.outputs[0] ] == n] \
             [self.n.features[0]].head(1).values[0]
