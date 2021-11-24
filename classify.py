@@ -147,6 +147,9 @@ class IA:
                 solver='lbfgs', alpha=1e-5,
                 hidden_layer_sizes=(13, 2), random_state=1)
             self.__predictor.fit(X, self.n.table[Normal.outputs[0] ])
+        # Remove dados não utilizados da tabela
+        for o in self.n.inputs:
+            self.n.table.drop(o, axis=1, inplace=True)
 
     # Faz a classificação dos dados de carga
     def classify(self, l):
