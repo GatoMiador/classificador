@@ -14,6 +14,7 @@ import json
 from enum import Enum
 import math
 import copy
+from sklearn.decomposition import PCA
 
 class Carga:
     nome = 'nada'
@@ -123,20 +124,29 @@ class Type(Enum):
     NEURAL = 2
 
 class IA:
-    def __init__(self, f, type=Type.KNN):
+    def __init__(self, f, type=Type.KNN, pca=True):
         self.n = Normal.load(f)
+        # Faz a PCA
+        self.pca = pca
+        if self.pca == True:
+            self.p = PCA(n_components='mle')
+            X = self.p.fit_transform(
+                self.n.table[ Normal.learning_data ].values)
+            print('PCA:',
+                  len(self.n.table[ Normal.learning_data ].columns),
+                  '-->',
+                  len(X[0]) )
+        else:
+            X = self.n.table[ Normal.learning_data ].values
+        # Faz a classificação de acordo com os dados de aprendizado
         if type == Type.KNN:
             self.__predictor = KNeighborsClassifier(n_neighbors=1)
-            self.__predictor.fit(
-                self.n.table[ Normal.learning_data ].values,
-                self.n.table[Normal.outputs[0] ])
+            self.__predictor.fit(X, self.n.table[Normal.outputs[0] ])
         elif type == Type.NEURAL:
             self.__predictor = MLPClassifier(
                 solver='lbfgs', alpha=1e-5,
                 hidden_layer_sizes=(13, 2), random_state=1)
-            self.__predictor.fit(
-                self.n.table[ Normal.learning_data ].values,
-                self.n.table[Normal.outputs[0] ])
+            self.__predictor.fit(X, self.n.table[Normal.outputs[0] ])
 
     # Faz a classificação dos dados de carga
     def classify(self, l):
@@ -152,7 +162,9 @@ class IA:
         z = []
         for n in Normal.learning_data:
             z = z + [ r[n] ]
-        n = self.__predictor.predict([z])[0]
+        if self.pca == True:
+            z = self.p.transform([z])
+        n = self.__predictor.predict(z)[0]
         # Devolve as peculiaridades da carga
         f = self.n.table[self.n.table[self.n.outputs[0] ] == n] \
             [self.n.features[0]].head(1).values[0]
