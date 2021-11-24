@@ -16,9 +16,9 @@ def rep(o):
     print('Potência Ativa:', o.P)
     print('Potência Reativa:', o.Q)
     print('Potência de Distorção:', o.D)
-    print('Faror de não potência:', o.fp)
-    print('Faror de não linearidade:', o.fl)
-    print('Faror de não reatividade:', o.fr)
+    print('Fator de potência:', o.fp)
+    print('Fator de não linearidade:', o.fl)
+    print('Fator de reatividade:', o.fr)
     print('Início:', o.ini)
     print('Fim:', o.fim)
     print('Duração:', o.fim - o.ini)
@@ -105,14 +105,12 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                             if 'inrush' in f:
                                 if f['inrush'] == True:
                                     if inrush == False:
-                                        print('modo inrush acionado:', n)
                                         inrush = True
                                         hora_inrush = hora
                                         velocidade = cycles*60
                                         ign = n + (cycles*60)-1
                                         step = 0
                                     else:
-                                        print('modo inrush desligado:', n)
                                         inrush = False
                                         hora = hora_inrush
                                         velocidade = def_velocidade
