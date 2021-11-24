@@ -47,7 +47,6 @@ class Normal:
         self.params = {}
         for o in self.inputs:
             self.params[o] = [ 0, 1 ]
-        self.classes = []
 
     table = pd.DataFrame(columns=inputs)
 
@@ -62,11 +61,9 @@ class Normal:
         data = data.drop(data[data[field] < ini].index)
         data = data.drop(data[data[field] > fim].index)
         sample = data.sample(num)
-        self.classes = self.classes + [ nome ]
         sample[self.features[0]] = \
             [ f ] * len(sample.index)
-        sample[self.outputs[0] ] = \
-            [ int(self.classes.index(nome) ) ] * len(sample.index)
+        sample[self.outputs[0] ] = [ nome ] * len(sample.index)
         self.table = self.table.append(sample)
         return
 
@@ -112,9 +109,6 @@ class Normal:
             f.table.to_csv(arquivo + ".csv", index = False)
             with open(arquivo + "_params.txt", 'w') as file:
                 file.write(json.dumps(f.params) )
-                file.close()
-            with open(arquivo + "_classes.txt", 'w') as file:
-                file.writelines(f.classes)
                 file.close()
 
     # Normaliza os dados de teste e validação
@@ -163,4 +157,4 @@ class IA:
         f = self.n.table[self.n.table[self.n.outputs[0] ] == n] \
             [self.n.features[0]].head(1).values[0]
 
-        return [ self.n.classes[int(n)], f]
+        return [ n, f ]
