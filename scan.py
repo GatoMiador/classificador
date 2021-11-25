@@ -46,7 +46,7 @@ cargas = []
 report = []
 
 path = "../"
-ia = nd.IA(path + "out_table", type=nd.Type.KNN)
+ia = nd.IA(path + "out_table", type=nd.Type.KNN, pca=False)
 
 nomes = ia.n.inputs + [ 'V', 'I' ]
 for chunk in pd.read_csv(path + "multi2_d.csv", \
