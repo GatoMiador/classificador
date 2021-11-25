@@ -40,7 +40,7 @@ class Carga:
 
 class Normal:
     inputs = [ 'P', 'Q', 'D', 'fp', 'fl', 'fr']
-    learning_data = [ 'P', 'Q', 'D', 'fp', 'fl', 'fr']
+    learning_data = [ 'P', 'fp', 'fl', 'fr']
     features = [ 'features' ]
     outputs = [ 'class' ]
 
@@ -126,27 +126,26 @@ class Type(Enum):
 class IA:
     def __init__(self, f, type=Type.KNN, pca=True):
         self.n = Normal.load(f)
+        z = copy.copy(self.n.table)
+        z.insert(0, 'X', 0)
+        learn = ['X'] + Normal.learning_data
         # Faz a PCA
         self.pca = pca
         if self.pca == True:
-            self.p = PCA(n_components='mle')
-            X = self.p.fit_transform(
-                self.n.table[ Normal.learning_data ].values)
-            print('PCA:',
-                  len(self.n.table[ Normal.learning_data ].columns),
-                  '-->',
-                  len(X[0]) )
+            self.p = PCA(n_components=3)
+            X = self.p.fit_transform(z[ learn ].values)
+            print('PCA:', len(z[ learn ].columns)-1, '-->', len(X[0]) )
         else:
-            X = self.n.table[ Normal.learning_data ].values
+            X = z[ learn ].values
         # Faz a classificação de acordo com os dados de aprendizado
         if type == Type.KNN:
             self.__predictor = KNeighborsClassifier(n_neighbors=1)
-            self.__predictor.fit(X, self.n.table[Normal.outputs[0] ])
+            self.__predictor.fit(X, z[Normal.outputs[0] ])
         elif type == Type.NEURAL:
             self.__predictor = MLPClassifier(
                 solver='lbfgs', alpha=1e-5,
                 hidden_layer_sizes=(13, 2), random_state=1)
-            self.__predictor.fit(X, self.n.table[Normal.outputs[0] ])
+            self.__predictor.fit(X, z[Normal.outputs[0] ])
         # Remove dados não utilizados da tabela
         for o in self.n.inputs:
             self.n.table.drop(o, axis=1, inplace=True)
@@ -162,11 +161,13 @@ class IA:
             'fl': l.fl,
             'fr': l.fr })
         # Envia para a IA para encontrar o número da carga
-        z = []
+        z = [ 0 ]
         for n in Normal.learning_data:
             z = z + [ r[n] ]
         if self.pca == True:
             z = self.p.transform([z])
+        else:
+            z = [ z ]
         n = self.__predictor.predict(z)[0]
         # Devolve as peculiaridades da carga
         f = self.n.table[self.n.table[self.n.outputs[0] ] == n] \
