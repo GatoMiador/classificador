@@ -91,12 +91,25 @@ class Normal:
                 to.rename(columns = {c: c+'_o'}, inplace = True)
             # Normaliza os dados
             f.params.clear()
-            for o in f.inputs:
+            inputs = copy.copy(f.inputs)
+            factors = [ 'fp', 'fl', 'fr']
+            for e in factors:
+                if e in inputs:
+                    inputs.remove(e)
+            for o in inputs:
                 mn = min(f.table[o])
                 f.table[o] = f.table[o] - mn
                 mx = max(f.table[o])
                 f.table[o] = f.table[o] / mx
                 f.params[o] = [ mn, mx ]
+            # Trata os fatores de potência e etc. como casos especiais
+            # seus valores já estão entre 0 e 1
+            f.params['fp'] = [ 0, 1 ]
+            f.params['fl'] = [ 0, 1 ]
+            # O fator de reatividade está sempre entre -1 e 1, normaliza
+            f.params['fr'] = [ -1, 2 ]
+            f.table['fr'] = f.table['fr'] - f.params['fr'][0]
+            f.table['fr'] = f.table['fr'] / f.params['fr'][1]
         # Salva os parâmetros que a IA vai usar
         with open(arquivo + ".data", 'wb') as outp:
             pickle.dump(f, outp, pickle.HIGHEST_PROTOCOL)
