@@ -153,8 +153,8 @@ class Type(Enum):
 class IA:
     def __init__(self, f, type=Type.KNN, pca=True):
         self.n = Normal.load(f)
-        # Adicionado um peso maior para a potência ativa
-        self.n.params['P'][1] = self.n.params['P'][1] / 10
+        # Adicionado o peso para a potência ativa
+        self.n.params['P'][1] = self.n.params['P'][1] / 1
         # Faz a normalização
         for o in self.n.inputs:
             self.n.table[o] = self.n.table[o] - self.n.params[o][0]
