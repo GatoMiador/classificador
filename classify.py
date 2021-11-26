@@ -176,8 +176,7 @@ class IA:
             self.predictor.fit(X, self.n.table[Normal.outputs[0] ])
         elif type == Type.NEURAL:
             self.predictor = MLPClassifier(
-                solver='lbfgs', alpha=1e-5,
-                hidden_layer_sizes=(13, 2), random_state=1)
+                solver='lbfgs', hidden_layer_sizes=(13,), random_state=1)
             self.predictor.fit(X, self.n.table[Normal.outputs[0] ])
 
     # Faz a classificação dos dados de carga
