@@ -105,13 +105,7 @@ class Normal:
         f.table.reset_index(drop=True, inplace=True)
         # Salva os dados normalizados, se configurado
         if normalize == True:
-            # Salva os dados não normalizados, não usados pela IA
-            to = copy.deepcopy(f.table)
-            to.drop(f.outputs[0], axis='columns', inplace=True)
-            to.drop(f.features[0], axis='columns', inplace=True)
-            for c in f.inputs:
-                to.rename(columns = {c: c+'_o'}, inplace = True)
-            # Normaliza os dados
+            # Normaliza os dados das potências
             f.params.clear()
             inputs = copy.copy(f.inputs)
             factors = [ 'fp', 'fl', 'fr']
@@ -120,9 +114,7 @@ class Normal:
                     inputs.remove(e)
             for o in inputs:
                 mini = f.minvals[o]
-                maxi = (f.maxvals[o] - f.minvals[o]) / 10
-                f.table[o] = f.table[o] - mini
-                f.table[o] = f.table[o] / maxi
+                maxi = f.maxvals[o] - f.minvals[o]
                 f.params[o] = [ mini, maxi ]
             # Trata os fatores de potência e etc. como casos especiais
             # já que seus valores já estão entre 0 e 1
@@ -130,8 +122,6 @@ class Normal:
             f.params['fl'] = [ 0, 1 ]
             # O fator de reatividade está sempre entre -1 e 1, normaliza
             f.params['fr'] = [ -1, 2 ]
-            f.table['fr'] = f.table['fr'] - f.params['fr'][0]
-            f.table['fr'] = f.table['fr'] / f.params['fr'][1]
         # Salva os parâmetros que a IA vai usar
         del f.minvals
         del f.maxvals
@@ -163,6 +153,12 @@ class Type(Enum):
 class IA:
     def __init__(self, f, type=Type.KNN, pca=True):
         self.n = Normal.load(f)
+        # Adicionado um peso maior para a potência ativa
+        self.n.params['P'][1] = self.n.params['P'][1] / 10
+        # Faz a normalização
+        for o in self.n.inputs:
+            self.n.table[o] = self.n.table[o] - self.n.params[o][0]
+            self.n.table[o] = self.n.table[o] / self.n.params[o][1]
         # Faz a PCA
         self.pca = pca
         if self.pca == True:
