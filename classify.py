@@ -178,7 +178,7 @@ class IA:
             self.predictor = MLPClassifier(
                 solver='lbfgs', alpha=1e-5,
                 hidden_layer_sizes=(13, 2), random_state=1)
-            self.__predictor.fit(X, self.n.tablez[Normal.outputs[0] ])
+            self.predictor.fit(X, self.n.table[Normal.outputs[0] ])
 
     # Faz a classificação dos dados de carga
     def classify(self, l):
