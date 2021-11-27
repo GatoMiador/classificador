@@ -12,8 +12,8 @@ from sklearn.neural_network import MLPClassifier
 import pickle
 import json
 from enum import Enum
-import copy
 from sklearn.decomposition import PCA
+import copy
 
 class Carga:
     nome = 'nada'
@@ -64,18 +64,7 @@ class Normal:
         # Carrega o dataset
         n = path + nome + "_d.csv"
         data = pd.read_csv(n, usecols=self.inputs, nrows=stop)
-        # Calcula os mínimos e máximos
-        minvals = data.min(axis=0)
-        maxvals = data.max(axis=0)
-        if hasattr(self, 'minvals') == False:
-            self.minvals = copy.copy(minvals)
-        if hasattr(self, 'maxvals') == False:
-            self.maxvals = copy.copy(maxvals)
-        for (a, b) in zip(self.minvals, minvals):
-            a = min(a, b)
-        for (a, b) in zip(self.maxvals, maxvals):
-            a = max(a, b)
-        # Carrega a tabela
+        # Remove os dados de início
         data.drop(range(start,), inplace=True)
         # Remove os outliers
         for field in outliers:
@@ -104,38 +93,14 @@ class Normal:
 
     # Salva a tabela de descritores e o relatório para verificação
     @staticmethod
-    def save(arquivo, f, normalize=True, report=True):
-        to = pd.DataFrame()
+    def save(arquivo, f, report=True):
         f.table.reset_index(drop=True, inplace=True)
-        # Salva os dados normalizados, se configurado
-        if normalize == True:
-            # Normaliza os dados das potências
-            f.params.clear()
-            inputs = copy.copy(f.inputs)
-            factors = [ 'fp', 'fl', 'fr']
-            for e in factors:
-                if e in inputs:
-                    inputs.remove(e)
-            for o in inputs:
-                mini = f.minvals[o]
-                maxi = f.maxvals[o] - f.minvals[o]
-                f.params[o] = [ mini, maxi ]
-            # Trata os fatores de potência e etc. como casos especiais
-            # já que seus valores já estão entre 0 e 1
-            f.params['fp'] = [ 0, 1 ]
-            f.params['fl'] = [ 0, 1 ]
-            f.params['fr'] = [ 0, 1 ]
         # Salva os parâmetros que a IA vai usar
-        del f.minvals
-        del f.maxvals
         with open(arquivo + ".data", 'wb') as outp:
             pickle.dump(f, outp, pickle.HIGHEST_PROTOCOL)
             outp.close()
         # Salva o report dos dados aprendidos, se configurado
         if report == True:
-            # Adiciona ao relatório os dados não normalizados
-            if normalize == True:
-                f.table = pd.concat([f.table, to], axis=1)
             # Adiciona os dados usados pela IA
             f.table.to_csv(arquivo + ".csv", index = False)
             with open(arquivo + "_params.txt", 'w') as file:
@@ -149,6 +114,24 @@ class Normal:
             f[o] = f[o] / self.params[o][1]
         return f
 
+    def calc_params(self, data):
+        minvals = data[self.inputs].min(axis=0)
+        maxvals = data[self.inputs].max(axis=0)
+        # Normaliza os dados das potências
+        self.params.clear()
+        inputs = copy.copy(self.inputs)
+        factors = [ 'fp', 'fl', 'fr']
+        for e in factors:
+            if e in inputs:
+                inputs.remove(e)
+        for o in inputs:
+            self.params[o] = [ minvals[o], maxvals[o] - minvals[o] ]
+        # Trata os fatores de potência e etc. como casos especiais
+        # já que seus valores já estão entre 0 e 1
+        self.params['fp'] = [ 0, 1 ]
+        self.params['fl'] = [ 0, 1 ]
+        self.params['fr'] = [ 0, 1 ]
+
 class Type(Enum):
     KNN = 1
     NEURAL = 2
@@ -156,8 +139,10 @@ class Type(Enum):
 class IA:
     def __init__(self, f, type=Type.KNN, pca=True):
         self.n = Normal.load(f)
+        # Encontra os valores de normalização
+        self.n.calc_params(self.n.table)
         # Adicionado o peso para a potência ativa
-        self.n.params['P'][1] = self.n.params['P'][1] / 1
+        self.n.params['P'][1] = self.n.params['P'][1] / 4
         # Faz a normalização
         for o in self.n.inputs:
             self.n.table[o] = self.n.table[o] - self.n.params[o][0]
