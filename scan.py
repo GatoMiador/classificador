@@ -139,60 +139,60 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                                     ac = nd.Carga()
                             cargas.append(l)
                     else:
-                        # Faz aqui se a carga saiu
-
-                        # Calcula a carga que saiu e classifica ela
-                        o = nd.Carga()
-                        o.fim = hora;
-                        o.P = ac.P - row['P']
-                        o.Q = ac.Q - row['Q']
-                        o.D = ac.D - row['D']
-                        o.I = ac.I - row['I']
-                        o.Ia = ac.Ia - row['Ia']
-                        o.Ir = ac.Ir - row['Ir']
-                        o.Iv = ac.Iv - row['Iv']
-                        o.V = row['V']
-                        o.calc_factors()
-                        [ o.nome, f] = ia.classify(o)
-                        # Procura pela carga que saiu
-                        index = -1
-                        i = 0
-                        for k in cargas:
-                            if k.nome == o.nome:
-                                index = i
-                                break
-                            i = i + 1
-                        if index >= 0:
-                            print("carga saiu:", cargas[index].nome,
-                                  ' -->', hora)
-                            ac = nd.Carga()
-                            if cargas[index].nome != 'nada':
-                                # Recalcula o thresold
-                                for o in cargas:
-                                    if o != cargas[index]:
-                                        ac.P = ac.P + o.P
-                                        ac.Q = ac.Q + o.Q
-                                        ac.D = ac.D + o.D
-                                        ac.I = ac.I + o.I
-                                        ac.Ia = ac.Ia + o.Ia
-                                        ac.Ir = ac.Ir + o.Ir
-                                        ac.Iv = ac.Iv + o.Iv
-                                ac.V = row['V']
-                                # Retorna os parâmetros default caso alterados
-                                velocidade = def_velocidade
-                                ign = def_ign
-                                inrush = False
-                            # Atualiza, remove e coloca as cargas no relatório
-                            cargas[index].fim = hora
-                            report.append(cargas[index])
-                            cargas.remove(cargas[index])
-                        else:
-                            # Adiciona a falsa detecção no relatório
-                            o.ini = hora
-                            o.fim = hora
-                            o.falso=True
-                            report.append(o)
-                            print("detecção falsa :", o.nome)
+                        # Faz aqui se a carga saiu e se há cargas para remover
+                        if len(cargas) > 0:
+                            # Calcula a carga que saiu e classifica ela
+                            o = nd.Carga()
+                            o.fim = hora;
+                            o.P = ac.P - row['P']
+                            o.Q = ac.Q - row['Q']
+                            o.D = ac.D - row['D']
+                            o.I = ac.I - row['I']
+                            o.Ia = ac.Ia - row['Ia']
+                            o.Ir = ac.Ir - row['Ir']
+                            o.Iv = ac.Iv - row['Iv']
+                            o.V = row['V']
+                            o.calc_factors()
+                            [ o.nome, f] = ia.classify(o)
+                            # Procura pela carga que saiu
+                            index = -1
+                            i = 0
+                            for k in cargas:
+                                if k.nome == o.nome:
+                                    index = i
+                                    break
+                                i = i + 1
+                            if index >= 0:
+                                print("carga saiu:", cargas[index].nome,
+                                      ' -->', hora)
+                                ac = nd.Carga()
+                                if cargas[index].nome != 'nada':
+                                    # Recalcula o thresold
+                                    for o in cargas:
+                                        if o != cargas[index]:
+                                            ac.P = ac.P + o.P
+                                            ac.Q = ac.Q + o.Q
+                                            ac.D = ac.D + o.D
+                                            ac.I = ac.I + o.I
+                                            ac.Ia = ac.Ia + o.Ia
+                                            ac.Ir = ac.Ir + o.Ir
+                                            ac.Iv = ac.Iv + o.Iv
+                                    ac.V = row['V']
+                                    # Retorna os parâmetros default caso alterados
+                                    velocidade = def_velocidade
+                                    ign = def_ign
+                                    inrush = False
+                                # Atualiza, remove e coloca as cargas no relatório
+                                cargas[index].fim = hora
+                                report.append(cargas[index])
+                                cargas.remove(cargas[index])
+                            else:
+                                # Adiciona a falsa detecção no relatório
+                                o.ini = hora
+                                o.fim = hora
+                                o.falso=True
+                                report.append(o)
+                                print("detecção falsa :", o.nome)
             else:
                 # Volta se a entrada se desestabiizou
                 step = 2
