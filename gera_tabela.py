@@ -28,7 +28,7 @@ outliers = {
 }
 n.load_table(path, 'luminaria', outliers, 2435000, 11000000, size)
 outliers = {
-    'P' : [ 4.66, 5.226 ],
+    'P' : [ -5.4, -4.572 ],
     'Q' : [ -3.722, -3.222 ],
     'D' : [ 13.48, 17.77 ],
 }

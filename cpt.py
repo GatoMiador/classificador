@@ -7,7 +7,6 @@ Created on Mon Nov  8 14:18:26 2021
 """
 
 import pandas as pd
-import matplotlib.pyplot as plt
 import time
 import math
 import os
@@ -62,9 +61,12 @@ def cpt(v, i, cycles=1024):
 
     i_a = MAF()  # Corrente ativa
 
-    i_r = MAF()  # Corrente reativa
+    Ia = [0] * len(v)
 
     i_v = MAF()  # Corrente residual
+
+    Iv = [0] * len(v)
+    Ir = [0] * len(v)
 
     P = [0] * len(v)  # Potência ativa média
 
@@ -82,67 +84,70 @@ def cpt(v, i, cycles=1024):
         # Calcula a potência ativa média
         _P = Pa.feed(v[index]*i[index]).get()
 
+        # Salva a potência ativa
+        P[index] = _P
+
         # Calcula a integral parcial da tensão
         _v_c = v_c.feed(v[index]).get()
 
         # Calcula a energia reativa
         _W = W.feed(_v_c * i[index]).get()
 
-        # Calcula a tensão eficaz
+        # Calcula a tensão eficaz ao quadrado
         _U = U.feed(v[index] ** 2).get()
+        # Calcula a tensão eficaz
         V[index] = math.sqrt(_U)
 
         # Calcula a corrente eficaz
         I[index] = math.sqrt(_I.feed(i[index] ** 2).get())
 
-        # Calcula a corrente ativa
         _ia = 0
         if _U != 0:
+            # Calcula a corrente ativa instantânea
             _ia = _P * v[index] / _U
-        Ia = math.sqrt(i_a.feed(_ia ** 2).get())
 
-        # Calcula a potência ativa
-        P[index] = V[index] * Ia
+        # Calcula a corrente ativa eficaz
+        Ia[index] = math.sqrt(i_a.feed(_ia ** 2).get())
 
         # Calcula a integral parcial da tensão eficaz ao quadrado
         _U_C = U_C.feed(_v_c ** 2).get()
 
-        # Calcula a corrente reativa
         _ir = 0
+        Ir[index] = 0
         if _U_C != 0:
+            # Calcula a corrente reativa instantânea
             _ir = _W * _v_c / _U_C
-        Ir = math.sqrt(i_r.feed(_ir ** 2).get())
-        if (_W < 0):
-            Ir = -Ir
+            # Calcula a corrente reativa eficaz
+            Ir[index] = _W / math.sqrt(_U_C)
 
         # Calcula a potência reativa
-        Q[index] = V[index] * Ir
+        Q[index] = V[index] * Ir[index]
 
-        # Calcula a corrente residual
+        # Calcula a corrente residual instantânea
         _iv = i[index] - _ia - _ir
-        Iv = math.sqrt(i_v.feed(_iv ** 2).get())
+
+        # Calcula a corrente residual eficaz
+        Iv[index] = math.sqrt(i_v.feed(_iv ** 2).get())
 
         # Calcula a potência residual
-        D[index] = V[index] * Iv
+        D[index] = V[index] * Iv[index]
 
-        # Calcula a potência aparente
-        A = math.sqrt(P[index]**2 + Q[index]**2 + D[index]**2)
-
-        if A != 0:
+        if I[index] != 0:
             # Calcula o fator de potência
-            fp[index] = P[index] / A
+            fp[index] = Ia[index] / I[index]
 
-            # Calcula o fator de linearidade
-            fl[index] = D[index] / A
+            # Calcula o fator de linearidade (versão Wesley)
+            fl[index] = 1 - Iv[index] / I[index]
 
-            # Calcula o fator de reatividade
-            fr[index] = Q[index] / A
+            # Calcula o fator de reatividade (versão Wesley)
+            fr[index] = 1 - Ir[index] / I[index]
         else:
             fp[index] = 0
             fl[index] = 0
             fr[index] = 0
-    return {'V': V, 'I': I, 'P': P, 'Q': Q, 'D': D, 'fp': fp, 'fl': fl, 'fr': fr}
-
+    return \
+{'V': V, 'I': I, 'Ia': Ia, 'Ir': Ir, 'Iv': Iv,
+ 'P': P, 'Q': Q, 'D': D, 'fp': fp, 'fl': fl, 'fr': fr}
 
 def convert(arquivo):
     col_names = ['date', 'VA', 'VB', 'VC', 'VN', 'IA', 'IB', 'IC', 'IN']
@@ -158,13 +163,6 @@ def convert(arquivo):
         writer = csv.writer(outfile)
         writer.writerow(res.keys())
         writer.writerows(zip(*res.values()))
-
-    # plt.plot(res['V'])
-    # plt.plot(res['I'])
-    # plt.plot(res['P'])
-    # plt.plot(res['Q'])
-    # plt.plot(res['D'])
-    # plt.show()
 
 #Calcula aqui a decomposição CPT das medições
 convert("../test.csv")

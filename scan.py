@@ -48,7 +48,7 @@ report = []
 path = "../"
 ia = nd.IA(path + "out_table", type=nd.Type.KNN, pca=False)
 
-nomes = ia.n.inputs + [ 'V', 'I' ]
+nomes = ia.n.inputs + [ 'V', 'I', 'Ia', 'Ir', 'Iv' ]
 for chunk in pd.read_csv(path + "multi2_d.csv", \
                          usecols=nomes, \
                          chunksize=1024*1024):
@@ -97,6 +97,9 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                         l.Q = row['Q'] - ac.Q
                         l.D = row['D'] - ac.D
                         l.I = row['I'] - ac.I
+                        l.Ia = row['Ia'] - ac.Ia
+                        l.Ir = row['Ir'] - ac.Ir
+                        l.Iv = row['Iv'] - ac.Iv
                         l.V = row['V']
                         l.calc_factors()
                         [ l.nome, f] = ia.classify(l)
@@ -124,6 +127,9 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                                 ac.D = row['D']
                                 ac.V = row['V']
                                 ac.I = row['I']
+                                ac.Ia = row['Ia']
+                                ac.Ir = row['Ir']
+                                ac.Iv = row['Iv']
                             else: 
                                 # Se a carga classificada é 'nada' e temos 
                                 # cargas ativas, zera os valores para que ela 
@@ -142,6 +148,9 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                         o.Q = ac.Q - row['Q']
                         o.D = ac.D - row['D']
                         o.I = ac.I - row['I']
+                        o.Ia = ac.Ia - row['Ia']
+                        o.Ir = ac.Ir - row['Ir']
+                        o.Iv = ac.Iv - row['Iv']
                         o.V = row['V']
                         o.calc_factors()
                         [ o.nome, f] = ia.classify(o)
@@ -165,6 +174,9 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                                         ac.Q = ac.Q + o.Q
                                         ac.D = ac.D + o.D
                                         ac.I = ac.I + o.I
+                                        ac.Ia = ac.Ia + o.Ia
+                                        ac.Ir = ac.Ir + o.Ir
+                                        ac.Iv = ac.Iv + o.Iv
                                 ac.V = row['V']
                                 # Retorna os parâmetros default caso alterados
                                 velocidade = def_velocidade

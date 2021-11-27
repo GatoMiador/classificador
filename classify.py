@@ -12,7 +12,6 @@ from sklearn.neural_network import MLPClassifier
 import pickle
 import json
 from enum import Enum
-import math
 import copy
 from sklearn.decomposition import PCA
 
@@ -23,6 +22,9 @@ class Carga:
     D = 0 
     V = 0 
     I = 0 
+    Ia = 0
+    Ir = 0
+    Iv = 0
     fp = 0 
     fl = 0
     fr = 0
@@ -32,10 +34,12 @@ class Carga:
 
     # Calcula os fatores do CPT
     def calc_factors(self):
-        A = math.sqrt(self.P**2 + self.Q**2 + self.D**2)
-        self.fp = self.P / A
-        self.fl = self.D / A
-        self.fr = self.Q / A
+        # Calcula o fator de potência
+        self.fp = self.Ia / self.I
+        # Calcula o fator de linearidade (versão Wesley)
+        self.fl = 1 - self.Iv / self.I
+        # Calcula o fator de reatividade (versão Wesley)
+        self.fr = 1 - self.Ir / self.I
 
 
 class Normal:
@@ -120,8 +124,7 @@ class Normal:
             # já que seus valores já estão entre 0 e 1
             f.params['fp'] = [ 0, 1 ]
             f.params['fl'] = [ 0, 1 ]
-            # O fator de reatividade está sempre entre -1 e 1, normaliza
-            f.params['fr'] = [ -1, 2 ]
+            f.params['fr'] = [ 0, 1 ]
         # Salva os parâmetros que a IA vai usar
         del f.minvals
         del f.maxvals
