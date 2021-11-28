@@ -22,10 +22,11 @@ def rep(o):
     print('Início:', o.ini)
     print('Fim:', o.fim)
     print('Duração:', o.fim - o.ini)
+    print('Probabilitade:', o.prob * 100, '%')
     print('Falso:', o.falso)
 
 I0 = 0
-delta = 0.03
+delta = 0.023
 step = 0;
 n = 0
 cycles = 1024
@@ -102,7 +103,7 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                         l.Iv = row['Iv'] - ac.Iv
                         l.V = row['V']
                         l.calc_factors()
-                        [ l.nome, f] = ia.classify(l)
+                        [ l.nome, f, l.prob] = ia.classify(l)
                         # Verifica se temos que acionar o modo inrush
                         if f is not None:
                             if 'inrush' in f:
@@ -153,7 +154,8 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                             o.Iv = ac.Iv - row['Iv']
                             o.V = row['V']
                             o.calc_factors()
-                            [ o.nome, f] = ia.classify(o)
+                            # Probabilidade não será usada aqui.
+                            [ o.nome, f, prob ] = ia.classify(o)
                             # Procura pela carga que saiu
                             index = -1
                             i = 0
@@ -193,6 +195,16 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                                 o.falso=True
                                 report.append(o)
                                 print("detecção falsa :", o.nome)
+                                # Faz o fix para o problema da carga reduzir
+                                # o consumo com o tmpo
+                                ac.P = row['P']
+                                ac.Q = row['Q']
+                                ac.D = row['D']
+                                ac.V = row['V']
+                                ac.I = row['I']
+                                ac.Ia = row['Ia']
+                                ac.Ir = row['Ir']
+                                ac.Iv = row['Iv']
             else:
                 # Volta se a entrada se desestabiizou
                 step = 2

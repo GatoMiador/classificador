@@ -31,6 +31,7 @@ class Carga:
     ini = -1
     fim = -1
     falso=False
+    prob = 0
 
     # Calcula os fatores do CPT
     def calc_factors(self):
@@ -187,8 +188,9 @@ class IA:
             z = [ z ]
         # Envia para a IA para encontrar o número da carga
         n = self.predictor.predict(z)[0]
+        p = max(self.predictor.predict_proba(z)[0])
         # Devolve as peculiaridades da carga
         f = self.n.table[self.n.table[self.n.outputs[0] ] == n] \
             [self.n.features[0]].head(1).values[0]
 
-        return [ n, f ]
+        return [ n, f,  p]
