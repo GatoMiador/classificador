@@ -26,7 +26,7 @@ def rep(o):
     print('Falso:', o.falso)
 
 I0 = 0
-delta = 0.023
+delta = 0.020
 step = 0;
 n = 0
 cycles = 1024
