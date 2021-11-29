@@ -193,6 +193,7 @@ for chunk in pd.read_csv(path + "multi2_d.csv", \
                                 o.ini = hora
                                 o.fim = hora
                                 o.falso=True
+                                o.prob = prob
                                 report.append(o)
                                 print("detecção falsa :", o.nome)
                                 # Faz o fix para o problema da carga reduzir
