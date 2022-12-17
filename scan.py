@@ -47,6 +47,8 @@ cargas = []
 report = []
 
 path = "../"
+# Trocar aqui o type para Type.NEURAL para rede neural
+# Trocar aqui o type para true para rede PCA
 ia = nd.IA(path + "out_table", type=nd.Type.KNN, pca=False)
 
 nomes = ia.n.inputs + [ 'V', 'I', 'Ia', 'Ir', 'Iv' ]
