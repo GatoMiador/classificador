@@ -1,0 +1,23 @@
+Descrição dos scripts desenvolvidos:
+
+
+classify.py:
+
+	Script com todos os algoritmos de IA
+
+confusão.py:
+
+	Script que gera as matrizes de confusão para os resultados
+
+cpt.py:
+
+	Script de calculo das parcelas CPT dos sinais adquridos
+
+gera_tabela.py:
+
+	Script de criação da tabela de classes para ensinar a IA.
+
+scan.py:
+
+	Script de escaneamento dos dados de teste e algoritmos de NILM
+
